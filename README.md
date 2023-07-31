@@ -8,20 +8,27 @@ The "kind" package in GoLang is designed to facilitate the inspection and catego
 Example:
 
 ```go
+import (
+    "fmt"
+    "github.com/goloop/kind"
+)
+
+...
+
 // Numeric types.
-a := aind.Of(42)
+a := kind.Of(42)
 fmt.Println(a.IsInt(), a.Name()) // true "int"
 
 // Slices.
-b := bind.Of([]int{1, 2, 3})
+b := kind.Of([]int{1, 2, 3})
 fmt.Println(b.IsSlice(), b.IsInt(), b.Name()) // true true "[]int"
 
 // Slice of slices.
-c := cind.Of([][]int{{1, 2, 3}, {4, 5, 6}})
+c := kind.Of([][]int{{1, 2, 3}, {4, 5, 6}})
 fmt.Println(c.IsSliceOfSlices(), c.IsInt(), c.Name()) // true true "[][]int"
 
 // Array of slices.
-d := dind.Of([3][]int{{1,2, 3}, {4, 5, 6}, {7, 8, 9}})
+d := kind.Of([3][]int{{1,2, 3}, {4, 5, 6}, {7, 8, 9}})
 fmt.Println(d.IsArrayOfSlices(), d.IsInt(), d.Name()) // true true "[3][]int"
 ```
 
