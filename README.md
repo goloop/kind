@@ -5,6 +5,26 @@
 
 The "kind" package in GoLang is designed to facilitate the inspection and categorization of different data types at runtime, using reflection. It provides a unified way of querying the characteristics of a given value, determining whether it's a simple or complex type, and even obtaining its string representation. The package revolves around a central Kind struct, which encapsulates the nature of a particular data type and provides a myriad of methods to query its specifics.
 
+Example:
+
+```go
+// Numeric types.
+a := aind.Of(42)
+fmt.Println(a.IsInt(), a.Name()) // true "int"
+
+// Slices.
+b := bind.Of([]int{1, 2, 3})
+fmt.Println(b.IsSlice(), b.IsInt(), b.Name()) // true true "[]int"
+
+// Slice of slices.
+c := cind.Of([][]int{{1, 2, 3}, {4, 5, 6}})
+fmt.Println(c.IsSliceOfSlices(), c.IsInt(), c.Name()) // true true "[][]int"
+
+// Array of slices.
+d := dind.Of([3][]int{{1,2, 3}, {4, 5, 6}, {7, 8, 9}})
+fmt.Println(d.IsArrayOfSlices(), d.IsInt(), d.Name()) // true true "[3][]int"
+```
+
 Key features and components include:
 
  1. The Kind struct: This structure serves as a container for an exhaustive list of possible data types a given value can have in Go. This includes scalars (like bools, ints, uints, floats, and strings), complex types (like arrays, slices, maps, channels, and structs), and some language-specific types (like pointers, interfaces, and functions). It also has a field to hold the value itself and a name that stores a string representation of the type.
