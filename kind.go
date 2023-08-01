@@ -56,7 +56,7 @@ type Kind struct {
 	mapKeyKind      *Kind       // representing the key type of a map
 	mapValueKind    *Kind       // representing the value type of a map
 	isMap           bool        // value is a map type
-	isUndefined     bool        // type is undefined
+	isUndefined     bool        // type is undefined (never used)
 	isNil           bool        // value is nil
 	isPointer       bool        // value is a pointer type
 	isArray         bool        // value is an array type
@@ -513,13 +513,15 @@ func Of(v interface{}) *Kind {
 	if v == nil {
 		k.isNil = true
 		k.name = "nil"
+
 		return k
 	}
 
 	t := reflect.TypeOf(v)
 	k.name = t.String()
 
-	checkComplexTypes(k, t)
+	level := 0
+	checkComplexTypes(k, t, level)
 
 	return k
 }
@@ -528,7 +530,7 @@ func Of(v interface{}) *Kind {
 // arrays, pointers, etc.
 //
 // This function is called recursively.
-func checkComplexTypes(k *Kind, t reflect.Type) {
+func checkComplexTypes(k *Kind, t reflect.Type, level int) {
 	multiSequence := func() bool {
 		return k.isSliceOfSlices || k.isSliceOfArrays ||
 			k.isArrayOfSlices || k.isArrayOfArrays
@@ -545,7 +547,7 @@ func checkComplexTypes(k *Kind, t reflect.Type) {
 		}
 
 		// Continue checking for more complex types.
-		checkComplexTypes(k, t.Elem())
+		checkComplexTypes(k, t.Elem(), level+1)
 	case reflect.Array:
 		if t.Elem().Kind() == reflect.Slice {
 			k.isArrayOfSlices = true
@@ -556,33 +558,31 @@ func checkComplexTypes(k *Kind, t reflect.Type) {
 		}
 
 		// Continue checking for more complex types.
-		checkComplexTypes(k, t.Elem())
+		checkComplexTypes(k, t.Elem(), level+1)
 	case reflect.Ptr:
 		k.isPointer = true
-
 		// Continue checking for more complex types.
-		checkComplexTypes(k, t.Elem())
+		checkComplexTypes(k, t.Elem(), level+1)
 	case reflect.Map:
 		k.isMap = true
 		k.mapKeyKind = &Kind{name: t.Key().String()}
 		k.mapValueKind = &Kind{name: t.Elem().String()}
-		checkComplexTypes(k.mapKeyKind, t.Key())
-		checkComplexTypes(k.mapValueKind, t.Elem())
-
-		// fmt.Println("!!!!", k.mapKeyKind, t.Key())
-		//k.mapKeyKind = Of(t.Key())
-		//k.mapValueKind = Of(t.Elem())
+		checkComplexTypes(k.mapKeyKind, t.Key(), 0)    // another level
+		checkComplexTypes(k.mapValueKind, t.Elem(), 0) // another level
 	case reflect.Chan:
 		k.isChannel = true
-		checkComplexTypes(k, t.Elem())
+		checkComplexTypes(k, t.Elem(), level+1)
 	case reflect.Struct:
 		k.isStruct = true
 		// For struct, we stop the recursion,
 		// because it could have many different types of fields.
-	case reflect.Interface:
-		k.isInterface = true
-		// For interface, we also stop the recursion,
-		// because it could have many different types of methods
+
+	// We cannot define an interface because an empty interface is nil,
+	// and if an object is passed through an interface, its type is a struct.
+	//  case reflect.Interface:
+	//  	k.isInterface = true
+	//  	// For interface, we also stop the recursion,
+	//  	// because it could have many different types of methods.
 	default:
 		switch t.Kind() {
 		case reflect.Bool:
@@ -619,9 +619,12 @@ func checkComplexTypes(k *Kind, t reflect.Type) {
 			k.isComplex64 = true
 		case reflect.Complex128:
 			k.isComplex128 = true
-		default:
-			k.name = "undefined"
-			k.isUndefined = true
+
+			// We cannot have a default solution since the object is either
+			// a simple type or a struct type. This block will never be used.
+			//  default:
+			//  	k.name = "undefined"
+			//  	k.isUndefined = true
 		}
 	}
 }
