@@ -116,14 +116,18 @@ func (t *Tag) Has(tag Tag) bool {
 	return v
 }
 
-// Is returns true if value is the specified flag.
-func (t *Tag) Is(tag Tag) bool {
-	v, _ := t.Contains(tag)
-	return v && t.IsSingle()
-}
+//// Is returns true if value is the specified flag.
+//func (t *Tag) Is(tag Tag) bool {
+//	v, _ := t.Contains(tag)
+//	return v && t.IsSingle()
+//}
 
-// IsEqual returns true if value is equal to the specified flag.
-func (t *Tag) IsEqual(tag Tag) bool {
+// Is returns true if value is equal to the specified flag.
+// Zero value is not equal to any flag and zero.
+func (t *Tag) Is(tag Tag) bool {
+	if *t == 0 {
+		return false
+	}
 	return *t == tag
 }
 

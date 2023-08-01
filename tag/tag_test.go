@@ -4,6 +4,34 @@ import (
 	"testing"
 )
 
+// TestTagHasIsIsEqual tests the Has, Is, and IsEqual methods.
+func TestTagHasIsIsEqual(t *testing.T) {
+	tests := []struct {
+		name    string
+		initial Tag
+		tag     Tag
+		wantHas bool
+		wantIs  bool
+	}{
+		{"one", Pointer, Pointer, true, true},
+		{"two", Pointer + Array, Pointer, true, false},
+		{"three", Pointer + Array, Array, true, false},
+		{"four", Pointer, Array, false, false},
+		{"five", 0, Array, false, false},
+		{"six", 0, 0, false, false},
+	}
+
+	for _, tt := range tests {
+		if got := tt.initial.Has(tt.tag); got != tt.wantHas {
+			t.Errorf("Has(%s) = %v, want %v", tt.name, got, tt.wantHas)
+		}
+
+		if got := tt.initial.Is(tt.tag); got != tt.wantIs {
+			t.Errorf("Is(%s) = %v, want %v", tt.name, got, tt.wantIs)
+		}
+	}
+}
+
 // TestIsSingle tests the IsSingle method.
 func TestIsSingle(t *testing.T) {
 	tests := []struct {
@@ -72,6 +100,17 @@ func TestContains(t *testing.T) {
 		if got != tt.want {
 			t.Errorf("Contains(%s) = %v, want %v", tt.name, got, tt.want)
 		}
+	}
+
+	// Incorret tag value
+	obj := Pointer
+	if _, err := obj.Contains(overflowTagValue); err == nil {
+		t.Errorf("Contains(overflowTagValue) expected error, but got none")
+	}
+
+	obj = Tag(overflowTagValue)
+	if _, err := obj.Contains(Pointer); err == nil {
+		t.Errorf("Contains(Pointer) expected error, but got none")
 	}
 }
 

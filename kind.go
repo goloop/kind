@@ -283,11 +283,13 @@ func (k *Kind) IsSigned() bool {
 //	kind := kind.Of([]int{1, 2, 3})
 //	fmt.Println(kind.Is("[]int")) // true
 func (k *Kind) Is(name string) bool {
+	// Try to find the name in the tag labels.
 	name = strings.Replace(strings.ToLower(name), " ", "", -1)
 	if t, ok := tag.Labels[name]; ok {
 		return k.tag.Has(t)
 	}
-	return false // k.name == strings.Replace(strings.ToLower(name), " ", "", -1)
+
+	return k.name == name
 }
 
 // String returns the name of the Kind instance.
