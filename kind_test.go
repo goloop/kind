@@ -2,8 +2,9 @@ package kind
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
+
+	"github.com/goloop/kind/tag"
 )
 
 // deepEqualKind compares two Kind structs and returns true if they are equal.
@@ -27,8 +28,8 @@ func deepEqualKind(a, b *Kind, prefixes ...string) (bool, string) {
 
 	equal := true
 	diffMap := make(map[string][2]string)
-	appendDiff := func(field string, aValue, bValue interface{}) {
-		if !reflect.DeepEqual(aValue, bValue) {
+	appendDiff := func(field string, aValue, bValue bool) {
+		if aValue != bValue {
 			equal = false
 			diffMap[field] = [2]string{
 				fmt.Sprintf("%v", aValue),
@@ -37,42 +38,47 @@ func deepEqualKind(a, b *Kind, prefixes ...string) (bool, string) {
 		}
 	}
 
-	appendDiff("name", a.name, b.name)
-	appendDiff("isUndefined", a.isUndefined, b.isUndefined)
-	appendDiff("isNil", a.isNil, b.isNil)
-	appendDiff("isPointer", a.isPointer, b.isPointer)
-	appendDiff("isArray", a.isArray, b.isArray)
-	appendDiff("isSlice", a.isSlice, b.isSlice)
-	appendDiff("isSliceOfSlices", a.isSliceOfSlices, b.isSliceOfSlices)
-	appendDiff("isArrayOfSlices", a.isArrayOfSlices, b.isArrayOfSlices)
-	appendDiff("isSliceOfArrays", a.isSliceOfArrays, b.isSliceOfArrays)
-	appendDiff("isArrayOfArrays", a.isArrayOfArrays, b.isArrayOfArrays)
-	appendDiff("isStruct", a.isStruct, b.isStruct)
-	appendDiff("isInterface", a.isInterface, b.isInterface)
-	appendDiff("isFunction", a.isFunction, b.isFunction)
-	appendDiff("isChannel", a.isChannel, b.isChannel)
-	appendDiff("isBool", a.isBool, b.isBool)
-	appendDiff("isString", a.isString, b.isString)
-	appendDiff("isInt8", a.isInt8, b.isInt8)
-	appendDiff("isInt16", a.isInt16, b.isInt16)
-	appendDiff("isInt32", a.isInt32, b.isInt32)
-	appendDiff("isInt64", a.isInt64, b.isInt64)
-	appendDiff("isUint8", a.isUint8, b.isUint8)
-	appendDiff("isUint16", a.isUint16, b.isUint16)
-	appendDiff("isUint32", a.isUint32, b.isUint32)
-	appendDiff("isUint64", a.isUint64, b.isUint64)
-	appendDiff("isInt", a.isInt, b.isInt)
-	appendDiff("isUint", a.isUint, b.isUint)
-	appendDiff("isUintptr", a.isUintptr, b.isUintptr)
-	appendDiff("isFloat32", a.isFloat32, b.isFloat32)
-	appendDiff("isFloat64", a.isFloat64, b.isFloat64)
-	appendDiff("isComplex64", a.isComplex64, b.isComplex64)
-	appendDiff("isComplex128", a.isComplex128, b.isComplex128)
+	if a.name != b.name {
+		equal = false
+		diffMap["name"] = [2]string{
+			fmt.Sprintf("%v", a.name),
+			fmt.Sprintf("%v", b.name),
+		}
+	}
+
+	appendDiff("isNil", a.IsNil(), b.IsNil())
+	appendDiff("isPointer", a.IsPointer(), b.IsPointer())
+	appendDiff("isArray", a.IsArray(), b.IsArray())
+	appendDiff("isSlice", a.IsSlice(), b.IsSlice())
+	appendDiff("isSliceOfSlices", a.IsSliceOfSlices(), b.IsSliceOfSlices())
+	appendDiff("isArrayOfSlices", a.IsArrayOfSlices(), b.IsArrayOfSlices())
+	appendDiff("isSliceOfArrays", a.IsSliceOfArrays(), b.IsSliceOfArrays())
+	appendDiff("isArrayOfArrays", a.IsArrayOfArrays(), b.IsArrayOfArrays())
+	appendDiff("isStruct", a.IsStruct(), b.IsStruct())
+	appendDiff("isFunction", a.IsFunction(), b.IsFunction())
+	appendDiff("isChannel", a.IsChannel(), b.IsChannel())
+	appendDiff("isBool", a.IsBool(), b.IsBool())
+	appendDiff("isString", a.IsString(), b.IsString())
+	appendDiff("isInt8", a.IsInt8(), b.IsInt8())
+	appendDiff("isInt16", a.IsInt16(), b.IsInt16())
+	appendDiff("isInt32", a.IsInt32(), b.IsInt32())
+	appendDiff("isInt64", a.IsInt64(), b.IsInt64())
+	appendDiff("isUint8", a.IsUint8(), b.IsUint8())
+	appendDiff("isUint16", a.IsUint16(), b.IsUint16())
+	appendDiff("isUint32", a.IsUint32(), b.IsUint32())
+	appendDiff("isUint64", a.IsUint64(), b.IsUint64())
+	appendDiff("isInt", a.IsInt(), b.IsInt())
+	appendDiff("isUint", a.IsUint(), b.IsUint())
+	appendDiff("isUintptr", a.IsUintptr(), b.IsUintptr())
+	appendDiff("isFloat32", a.IsFloat32(), b.IsFloat32())
+	appendDiff("isFloat64", a.IsFloat64(), b.IsFloat64())
+	appendDiff("isComplex64", a.IsComplex64(), b.IsComplex64())
+	appendDiff("isComplex128", a.IsComplex128(), b.IsComplex128())
 
 	// Map has a special case for key and value types.
-	appendDiff("isMap", a.isMap, b.isMap)
+	appendDiff("isMap", a.IsMap(), b.IsMap())
 	mapDiff := ""
-	if a.isMap && b.isMap {
+	if a.IsMap() && b.IsMap() {
 
 		if ok, r := deepEqualKind(a.mapKeyKind, b.mapKeyKind, "\t"); !ok {
 			mapDiff += fmt.Sprintf("mapKeyKind:\n%s", r)
@@ -110,92 +116,92 @@ func TestOfSimpleTypes(t *testing.T) {
 		{
 			name:  "bool",
 			input: true,
-			kind:  &Kind{name: "bool", isBool: true},
+			kind:  &Kind{name: "bool", tag: tag.Bool},
 		},
 		{
 			name:  "string",
 			input: "test",
-			kind:  &Kind{name: "string", isString: true},
+			kind:  &Kind{name: "string", tag: tag.String},
 		},
 		{
 			name:  "int8",
 			input: int8(1),
-			kind:  &Kind{name: "int8", isInt8: true},
+			kind:  &Kind{name: "int8", tag: tag.Int8},
 		},
 		{
 			name:  "int16",
 			input: int16(1),
-			kind:  &Kind{name: "int16", isInt16: true},
+			kind:  &Kind{name: "int16", tag: tag.Int16},
 		},
 		{
 			name:  "int32",
 			input: int32(1),
-			kind:  &Kind{name: "int32", isInt32: true},
+			kind:  &Kind{name: "int32", tag: tag.Int32},
 		},
 		{
 			name:  "int64",
 			input: int64(1),
-			kind:  &Kind{name: "int64", isInt64: true},
+			kind:  &Kind{name: "int64", tag: tag.Int64},
 		},
 		{
 			name:  "uint8",
 			input: uint8(1),
-			kind:  &Kind{name: "uint8", isUint8: true},
+			kind:  &Kind{name: "uint8", tag: tag.Uint8},
 		},
 		{
 			name:  "uint16",
 			input: uint16(1),
-			kind:  &Kind{name: "uint16", isUint16: true},
+			kind:  &Kind{name: "uint16", tag: tag.Uint16},
 		},
 		{
 			name:  "uint32",
 			input: uint32(1),
-			kind:  &Kind{name: "uint32", isUint32: true},
+			kind:  &Kind{name: "uint32", tag: tag.Uint32},
 		},
 		{
 			name:  "uint64",
 			input: uint64(1),
-			kind:  &Kind{name: "uint64", isUint64: true},
+			kind:  &Kind{name: "uint64", tag: tag.Uint64},
 		},
 		{
 			name:  "int",
 			input: 1,
-			kind:  &Kind{name: "int", isInt: true},
+			kind:  &Kind{name: "int", tag: tag.Int},
 		},
 		{
 			name:  "uint",
 			input: uint(1),
-			kind:  &Kind{name: "uint", isUint: true},
+			kind:  &Kind{name: "uint", tag: tag.Uint},
 		},
 		{
 			name:  "uintptr",
 			input: uintptr(1),
-			kind:  &Kind{name: "uintptr", isUintptr: true},
+			kind:  &Kind{name: "uintptr", tag: tag.Uintptr},
 		},
 		{
 			name:  "float32",
 			input: float32(1),
-			kind:  &Kind{name: "float32", isFloat32: true},
+			kind:  &Kind{name: "float32", tag: tag.Float32},
 		},
 		{
 			name:  "float64",
 			input: float64(1),
-			kind:  &Kind{name: "float64", isFloat64: true},
+			kind:  &Kind{name: "float64", tag: tag.Float64},
 		},
 		{
 			name:  "complex64",
 			input: complex64(1),
-			kind:  &Kind{name: "complex64", isComplex64: true},
+			kind:  &Kind{name: "complex64", tag: tag.Complex64},
 		},
 		{
 			name:  "complex128",
 			input: complex128(1),
-			kind:  &Kind{name: "complex128", isComplex128: true},
+			kind:  &Kind{name: "complex128", tag: tag.Complex128},
 		},
 		{
 			name:  "nil",
 			input: nil,
-			kind:  &Kind{name: "nil", isNil: true},
+			kind:  &Kind{name: "nil", tag: tag.Nil},
 		},
 	}
 
@@ -226,67 +232,56 @@ func TestOfComplexTypes(t *testing.T) {
 			name:  "array",
 			input: [5]int{1, 2, 3, 4, 5},
 			kind: &Kind{
-				name:    "[5]int",
-				isArray: true,
-				isInt:   true,
+				name: "[5]int",
+				tag:  tag.Array | tag.Int,
 			},
 		},
 		{
 			name:  "pointer",
 			input: new(int),
 			kind: &Kind{
-				name:      "*int",
-				isPointer: true,
-				isInt:     true,
+				name: "*int",
+				tag:  tag.Pointer | tag.Int,
 			},
 		},
 		{
 			name:  "slice",
 			input: []int{1, 2, 3},
 			kind: &Kind{
-				name:    "[]int",
-				isSlice: true,
-				isInt:   true,
+				name: "[]int",
+				tag:  tag.Slice | tag.Int,
 			},
 		},
 		{
 			name:  "slice of slices",
 			input: [][]int{{1, 2}, {3, 4}},
 			kind: &Kind{
-				name:            "[][]int",
-				isSlice:         false, // because it is slice of slices
-				isSliceOfSlices: true,
-				isInt:           true,
+				name: "[][]int",
+				tag:  tag.SliceOfSlices | tag.Int,
 			},
 		},
 		{
 			name:  "slice of arrays",
 			input: [][2]int{{1, 2}, {3, 4}},
 			kind: &Kind{
-				name:            "[][2]int",
-				isSlice:         false, // because it is slice of arrays
-				isSliceOfArrays: true,
-				isInt:           true,
+				name: "[][2]int",
+				tag:  tag.SliceOfArrays | tag.Int,
 			},
 		},
 		{
 			name:  "array of slices",
 			input: [2][]int{{1, 2}, {3, 4}},
 			kind: &Kind{
-				name:            "[2][]int",
-				isArray:         false, // because it is slice of arrays
-				isArrayOfSlices: true,
-				isInt:           true,
+				name: "[2][]int",
+				tag:  tag.ArrayOfSlices | tag.Int,
 			},
 		},
 		{
 			name:  "array of arrays",
 			input: [2][2]int{{1, 2}, {3, 4}},
 			kind: &Kind{
-				name:            "[2][2]int",
-				isArray:         false, // because it is slice of arrays
-				isArrayOfArrays: true,
-				isInt:           true,
+				name: "[2][2]int",
+				tag:  tag.ArrayOfArrays | tag.Int,
 			},
 		},
 		{
@@ -294,9 +289,9 @@ func TestOfComplexTypes(t *testing.T) {
 			input: map[string]int{"one": 1, "two": 2},
 			kind: &Kind{
 				name:         "map[string]int",
-				isMap:        true,
-				mapKeyKind:   &Kind{name: "string", isString: true},
-				mapValueKind: &Kind{name: "int", isInt: true},
+				tag:          tag.Map,
+				mapKeyKind:   &Kind{name: "string", tag: tag.String},
+				mapValueKind: &Kind{name: "int", tag: tag.Int},
 			},
 		},
 		{
@@ -304,26 +299,25 @@ func TestOfComplexTypes(t *testing.T) {
 			input: map[string][]int{"one": {1}, "two": {1, 2}},
 			kind: &Kind{
 				name:         "map[string][]int",
-				isMap:        true,
-				mapKeyKind:   &Kind{name: "string", isString: true},
-				mapValueKind: &Kind{name: "[]int", isInt: true, isSlice: true},
+				tag:          tag.Map,
+				mapKeyKind:   &Kind{name: "string", tag: tag.String},
+				mapValueKind: &Kind{name: "[]int", tag: tag.Slice | tag.Int},
 			},
 		},
 		{
 			name:  "channel",
 			input: make(chan int),
 			kind: &Kind{
-				name:      "chan int",
-				isChannel: true,
-				isInt:     true,
+				name: "chan int",
+				tag:  tag.Chan | tag.Int,
 			},
 		},
 		{
 			name:  "struct",
 			input: struct{ a int }{a: 1},
 			kind: &Kind{
-				name:     "struct { a int }",
-				isStruct: true,
+				name: "struct { a int }",
+				tag:  tag.Struct,
 			},
 		},
 	}
