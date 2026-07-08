@@ -38,6 +38,11 @@ func publishDescriptorTree(d *descriptor, seen map[*descriptor]struct{}) {
 	}
 	publishDescriptorTree(d.key, seen)
 	publishDescriptorTree(d.elem, seen)
+	for _, f := range d.fields {
+		if f.Type != nil {
+			publishDescriptorTree(f.Type.desc, seen)
+		}
+	}
 }
 
 func buildDescriptor(t reflect.Type, seen map[reflect.Type]*descriptor) *descriptor {
@@ -145,6 +150,7 @@ func classify(d *descriptor, t reflect.Type, seen map[reflect.Type]*descriptor) 
 		d.flags |= leafFlags(elem.flags)
 	case reflect.Struct:
 		d.flags |= flagStruct
+		d.fields = buildFields(t, seen)
 	case reflect.Interface:
 		d.flags |= flagInterface
 	case reflect.Func:

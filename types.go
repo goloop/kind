@@ -56,12 +56,13 @@ type Kind struct {
 }
 
 type descriptor struct {
-	name  string
-	t     reflect.Type
-	flags flag
-	key   *descriptor
-	elem  *descriptor
-	kind  *Kind
+	name   string
+	t      reflect.Type
+	flags  flag
+	key    *descriptor
+	elem   *descriptor
+	fields []Field
+	kind   *Kind
 }
 
 var nilKind = &Kind{

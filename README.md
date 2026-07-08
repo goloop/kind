@@ -17,7 +17,12 @@ configuration loaders and diagnostics.
 - Value-aware `IsNil` and `IsZero`, including typed nil pointers, slices, maps,
   channels and funcs.
 - Static type inspection through `TypeOf[T]()` and `OfType(reflect.Type)`.
-- Container helpers: `Elem`, `Key`, `MapKeyKind`, `MapValueKind`.
+- Container helpers: `Elem`, `Key`, `Leaf`, `Base`, `Depth`, `Len`, `Cap`.
+- Category predicates: `IsScalar`, `IsContainer`, `IsComposite`,
+  `IsReference`, `IsComparable`, `IsOrdered`, `IsNumeric`.
+- Struct field/tag helpers for parser and config packages.
+- Assignability and interface helpers, including generic top-level functions
+  such as `kind.Implements[encoding.TextMarshaler](k)`.
 - Numeric and scalar predicates, including named types and `uintptr`.
 - Safe `As*` helpers for scalar values; named scalar types convert without
   panicking.
@@ -49,6 +54,8 @@ func main() {
     fmt.Println(k.MapKeyKind().IsString())   // true
     fmt.Println(k.MapValueKind().IsSlice())  // true
     fmt.Println(k.MapValueKind().IsInt())    // true
+    fmt.Println(k.Depth())                    // 2
+    fmt.Println(k.Leaf().Name())              // int
 }
 ```
 
@@ -61,6 +68,21 @@ type Reader interface {
 
 k := kind.TypeOf[Reader]()
 fmt.Println(k.IsInterface()) // true
+```
+
+Struct tags are cached with the type descriptor:
+
+```go
+type Config struct {
+    Port int `env:"PORT" json:"port"`
+}
+
+k := kind.TypeOf[Config]()
+field, _ := k.Field("Port")
+
+fmt.Println(k.HasTag("env"))        // true
+fmt.Println(field.Type.IsInt())     // true
+fmt.Println(field.Tag.Get("json"))  // port
 ```
 
 ## Notes

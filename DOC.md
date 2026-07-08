@@ -29,6 +29,8 @@ func (k *Kind) Elem() *Kind
 func (k *Kind) Key() *Kind
 func (k *Kind) MapKeyKind() *Kind
 func (k *Kind) MapValueKind() *Kind
+func (k *Kind) Leaf() *Kind
+func (k *Kind) Base() *Kind
 ```
 
 `Elem` works for pointers, arrays, slices, maps and channels. `Key` works for
@@ -44,19 +46,31 @@ IsNil() bool
 IsZero() bool
 IsNilable() bool
 IsNamed() bool
+IsEmpty() bool
+IsTruthy() bool
 ```
 
 Containers and composite/reference types:
 
 ```go
+IsScalar() bool
+IsContainer() bool
+IsComposite() bool
+IsReference() bool
+IsComparable() bool
+IsOrdered() bool
+IsNumeric() bool
 IsPointer() bool
+IsPointerToStruct() bool
 IsArray() bool
 IsSlice() bool
+IsSliceLike() bool
 IsSliceOfSlices() bool
 IsArrayOfSlices() bool
 IsSliceOfArrays() bool
 IsArrayOfArrays() bool
 IsMap() bool
+IsMapLike() bool
 IsStruct() bool
 IsInterface() bool
 IsFunction() bool
@@ -96,6 +110,78 @@ IsSigned() bool
 Container predicates keep the historical behaviour where the leaf type is also
 visible. For example, `kind.Of([]int{}).IsSlice()` and
 `kind.Of([]int{}).IsInt()` both return true.
+
+## Shape and Indirection
+
+```go
+func (k *Kind) ChanDir() reflect.ChanDir
+func (k *Kind) Len() int
+func (k *Kind) Cap() int
+func (k *Kind) Depth() int
+func (k *Kind) Deref() *Kind
+func (k *Kind) Indirect() *Kind
+func (k *Kind) PointerDepth() int
+func (k *Kind) IsPointerTo(target reflect.Type) bool
+func IsPointerTo[T any](k *Kind) bool
+```
+
+`Leaf` / `Base` follow pointer, array, slice, map and channel element types to
+the terminal type. For example `[][]*User` has depth `3` and leaf `User`.
+
+`Len` returns the value length for strings, arrays, slices, maps and channels.
+For type-only arrays it returns the array length. Otherwise it returns `-1`.
+`Cap` returns capacity for arrays, slices and channels, or `-1`.
+
+## Struct Fields
+
+```go
+type Field struct {
+    Name      string
+    Type      *Kind
+    Index     []int
+    Tag       reflect.StructTag
+    Anonymous bool
+    Exported  bool
+    Offset    uintptr
+}
+
+func (k *Kind) Fields() []Field
+func (k *Kind) ExportedFields() []Field
+func (k *Kind) HasField(name string) bool
+func (k *Kind) Field(name string) (Field, bool)
+func (k *Kind) HasTag(key string) bool
+func (k *Kind) FieldsByTag(key string) []Field
+func (f Field) HasTag(key string) bool
+func (f Field) TagValue(key string) (string, bool)
+```
+
+Field APIs inspect direct struct fields. Returned slices and index values are
+defensive copies, so callers can sort or modify them without mutating the cache.
+
+## Assignability and Interfaces
+
+Go does not support generic methods, so generic helpers are top-level
+functions rather than `k.Implements[T]()` methods.
+
+```go
+func (k *Kind) Implements(target reflect.Type) bool
+func (k *Kind) AssignableTo(target reflect.Type) bool
+func (k *Kind) ConvertibleTo(target reflect.Type) bool
+func Implements[T any](k *Kind) bool
+func AssignableTo[T any](k *Kind) bool
+func ConvertibleTo[T any](k *Kind) bool
+```
+
+For common parser/encoding checks:
+
+```go
+IsTextMarshaler() bool
+IsTextUnmarshaler() bool
+IsJSONMarshaler() bool
+IsJSONUnmarshaler() bool
+IsError() bool
+IsStringer() bool
+```
 
 ## Conversions
 
@@ -142,6 +228,18 @@ type Reader interface {
 
 k := kind.TypeOf[Reader]()
 fmt.Println(k.IsInterface()) // true
+```
+
+```go
+type Config struct {
+    Port int `env:"PORT" json:"port"`
+}
+
+k := kind.TypeOf[Config]()
+field, _ := k.Field("Port")
+fmt.Println(k.HasTag("env"))          // true
+fmt.Println(field.Type.IsInt())       // true
+fmt.Println(field.TagValue("json"))   // "port", true
 ```
 
 ## Performance

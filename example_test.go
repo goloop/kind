@@ -33,3 +33,22 @@ func ExampleTypeOf() {
 	// true
 	// interface
 }
+
+func ExampleKind_Fields() {
+	type Config struct {
+		Port int `env:"PORT" json:"port"`
+	}
+
+	k := kind.TypeOf[Config]()
+	field, _ := k.Field("Port")
+	jsonTag, _ := field.TagValue("json")
+
+	fmt.Println(k.HasTag("env"))
+	fmt.Println(field.Type.IsInt())
+	fmt.Println(jsonTag)
+
+	// Output:
+	// true
+	// true
+	// port
+}
