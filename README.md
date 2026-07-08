@@ -1,49 +1,84 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/goloop/kind)](https://goreportcard.com/report/github.com/goloop/kind) [![License](https://img.shields.io/badge/license-MIT-brightgreen)](https://github.com/goloop/kind/blob/master/LICENSE) [![License](https://img.shields.io/badge/godoc-YES-green)](https://godoc.org/github.com/goloop/kind) [![Stay with Ukraine](https://img.shields.io/static/v1?label=Stay%20with&message=Ukraine%20♥&color=ffD700&labelColor=0057B8&style=flat)](https://u24.gov.ua/)
-
+[![deps.dev](https://img.shields.io/badge/deps.dev-insights-4c8dbc)](https://deps.dev/go/github.com%2Fgoloop%2Fkind) [![Go Reference](https://pkg.go.dev/badge/github.com/goloop/kind.svg)](https://pkg.go.dev/github.com/goloop/kind) [![License](https://img.shields.io/badge/license-MIT-brightgreen?style=flat)](https://github.com/goloop/kind/blob/master/LICENSE) [![Stay with Ukraine](https://img.shields.io/static/v1?label=Stay%20with&message=Ukraine%20♥&color=ffD700&labelColor=0057B8&style=flat)](https://u24.gov.ua/)
 
 # kind
 
-The "kind" package in GoLang is designed to facilitate the inspection and categorization of different data types at runtime, using reflection. It provides a unified way of querying the characteristics of a given value, determining whether it's a simple or complex type, and even obtaining its string representation. The package revolves around a central Kind struct, which encapsulates the nature of a particular data type and provides a myriad of methods to query its specifics.
+`kind` is a small cached reflection helper for Go. It classifies values and
+types with readable predicates such as `IsSlice`, `IsMap`, `IsInt`,
+`IsNilable`, `IsNamed`, `IsZero`, and exposes map key / element information
+without repeating reflection code at every call site.
 
-Example:
+The package is intentionally narrow: it does not replace `reflect`, but wraps
+the common type-inspection questions that appear in parsers, validators,
+configuration loaders and diagnostics.
+
+## Features
+
+- Cached descriptors per `reflect.Type`.
+- Value-aware `IsNil` and `IsZero`, including typed nil pointers, slices, maps,
+  channels and funcs.
+- Static type inspection through `TypeOf[T]()` and `OfType(reflect.Type)`.
+- Container helpers: `Elem`, `Key`, `MapKeyKind`, `MapValueKind`.
+- Numeric and scalar predicates, including named types and `uintptr`.
+- Safe `As*` helpers for scalar values; named scalar types convert without
+  panicking.
+- Zero third-party dependencies.
+
+## Installation
+
+```shell
+go get github.com/goloop/kind
+```
+
+Requires Go 1.24 or newer.
+
+## Quick Start
 
 ```go
+package main
+
 import (
     "fmt"
+
     "github.com/goloop/kind"
 )
 
-...
+func main() {
+    k := kind.Of(map[string][]int{"one": {1, 2, 3}})
 
-// Numeric types.
-a := kind.Of(42)
-fmt.Println(a.IsInt(), a.Name()) // true "int"
-
-// Slices.
-b := kind.Of([]int{1, 2, 3})
-fmt.Println(b.IsSlice(), b.IsInt(), b.Name()) // true true "[]int"
-
-// Slice of slices.
-c := kind.Of([][]int{{1, 2, 3}, {4, 5, 6}})
-fmt.Println(c.IsSliceOfSlices(), c.IsInt(), c.Name()) // true true "[][]int"
-
-// Array of slices.
-d := kind.Of([3][]int{{1,2, 3}, {4, 5, 6}, {7, 8, 9}})
-fmt.Println(d.IsArrayOfSlices(), d.IsInt(), d.Name()) // true true "[3][]int"
+    fmt.Println(k.IsMap())                   // true
+    fmt.Println(k.MapKeyKind().IsString())   // true
+    fmt.Println(k.MapValueKind().IsSlice())  // true
+    fmt.Println(k.MapValueKind().IsInt())    // true
+}
 ```
 
-Key features and components include:
+Static interface types should be inspected with `TypeOf`:
 
- 1. The Kind struct: This structure serves as a container for an exhaustive list of possible data types a given value can have in Go. This includes scalars (like bools, ints, uints, floats, and strings), complex types (like arrays, slices, maps, channels, and structs), and some language-specific types (like pointers, interfaces, and functions). It also has a field to hold the value itself and a name that stores a string representation of the type.
+```go
+type Reader interface {
+    Read([]byte) (int, error)
+}
 
- 2. Query methods: The Kind struct offers numerous methods that let you determine if the encapsulated value is of a particular type. Each method corresponds to a particular type (e.g., IsInt(), IsSlice(), IsMap()) and returns true if the value is of that type.
+k := kind.TypeOf[Reader]()
+fmt.Println(k.IsInterface()) // true
+```
 
- 3. Conversion methods: The struct also provides methods to attempt conversion of the encapsulated value to a specific type. If successful, these methods return the value in the requested type along with a success indicator (e.g., AsBool(), AsFloat32()).
+## Notes
 
- 4. Helper functions: There are additional methods to assist with common tasks, such as determining whether a value is of a complex type (IsComplex()), or whether it is a signed or unsigned type (IsSigned(), IsUnsigned()). There's also an Is function that compares the name of the kind with a provided string, offering another way to determine the type.
+`Of(value)` sees the dynamic type stored in an interface, exactly like
+`reflect.TypeOf`. If you need a static interface type, use `TypeOf[T]()` or
+`OfType`.
 
- 5. Map Key-Value Kind information: If the type in question is a Map, then MapKeyKind() and MapValueKind() provide Kind instances representing the type of key and value respectively.
+## Contributing
 
- 6. Of function: This package provides a standalone Of function that takes in a value and returns an instance of Kind that describes the type of the given value. It performs an initial check to see if the value is nil, and then proceeds to dissect the type of the value using reflection, populating the relevant fields in the Kind struct accordingly.
+Before submitting changes, run:
 
-In summary, the "kind" package in GoLang is a robust utility for dealing with dynamic types, making it much easier to inspect, categorize, and convert different types of data at runtime.
+```shell
+go test ./...
+go vet ./...
+gofmt -l .
+```
+
+## License
+
+`kind` is released under the MIT License. See [LICENSE](LICENSE).
