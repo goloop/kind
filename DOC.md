@@ -37,6 +37,10 @@ func (k *Kind) Base() *Kind
 maps. If there is no such type component, the methods return a nil Kind whose
 `Name()` is `"nil"`.
 
+`Is` ignores whitespace in the compared name. It is case-insensitive only for
+built-in scalar type names such as `int`, `string` and `float64`; named and
+composite types are compared case-sensitively.
+
 ## Predicates
 
 Value state:
@@ -107,9 +111,10 @@ IsUnsigned() bool
 IsSigned() bool
 ```
 
-Container predicates keep the historical behaviour where the leaf type is also
-visible. For example, `kind.Of([]int{}).IsSlice()` and
-`kind.Of([]int{}).IsInt()` both return true.
+Container predicates keep the historical behaviour where the element leaf type
+is also visible. For example, `kind.Of([]int{}).IsSlice()` and
+`kind.Of([]int{}).IsInt()` both return true. For maps, scalar leaf predicates
+describe the value type only; inspect the key with `Key` or `MapKeyKind`.
 
 ## Shape and Indirection
 
@@ -277,6 +282,7 @@ fmt.Println(k.IsMap())                  // true
 fmt.Println(k.MapKeyKind().IsString())  // true
 fmt.Println(k.MapValueKind().IsSlice()) // true
 fmt.Println(k.MapValueKind().IsInt())   // true
+fmt.Println(k.IsString())               // false
 ```
 
 ```go

@@ -27,6 +27,8 @@ configuration loaders and diagnostics.
   marshaling, validation, parsing, flag values, SQL scanner/valuer, IO and
   slog value support.
 - Numeric and scalar predicates, including named types and `uintptr`.
+- For maps, scalar leaf predicates describe the value type; inspect keys with
+  `Key` or `MapKeyKind`.
 - Safe `As*` helpers for scalar values; named scalar types convert without
   panicking.
 - Zero third-party dependencies.
@@ -57,6 +59,7 @@ func main() {
     fmt.Println(k.MapKeyKind().IsString())   // true
     fmt.Println(k.MapValueKind().IsSlice())  // true
     fmt.Println(k.MapValueKind().IsInt())    // true
+    fmt.Println(k.IsString())                 // false; map key does not leak into leaf flags
     fmt.Println(k.Depth())                    // 2
     fmt.Println(k.Leaf().Name())              // int
 }

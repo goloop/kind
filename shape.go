@@ -101,6 +101,9 @@ func walkLeaf(d *descriptor) (int, *descriptor) {
 	seen := make(map[*descriptor]struct{}, 8)
 	depth := 0
 	for d != nil {
+		if d.t == nil {
+			return depth, d
+		}
 		if _, ok := seen[d]; ok {
 			return depth, d
 		}

@@ -25,7 +25,7 @@ func TestShape(t *testing.T) {
 	}
 
 	m := TypeOf[map[string][]int]()
-	if !m.IsMapLike() || m.Depth() != 2 || !m.Leaf().IsInt() {
+	if !m.IsMapLike() || m.Depth() != 2 || !m.Leaf().IsInt() || m.IsString() {
 		t.Fatalf("unexpected map shape: depth=%d leaf=%s", m.Depth(), m.Leaf())
 	}
 

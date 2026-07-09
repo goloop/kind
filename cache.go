@@ -6,6 +6,7 @@ import (
 )
 
 var typeCache sync.Map // map[reflect.Type]*descriptor
+var typeBuildMu sync.Mutex
 
 func descriptorOf(t reflect.Type) *descriptor {
 	if t == nil {
@@ -15,13 +16,46 @@ func descriptorOf(t reflect.Type) *descriptor {
 		return d.(*descriptor)
 	}
 
-	d := buildDescriptor(t, make(map[reflect.Type]*descriptor, 8))
-	publishDescriptorTree(d, make(map[*descriptor]struct{}, 8))
-	actual, _ := typeCache.Load(t)
-	if actual == nil {
-		actual, _ = typeCache.LoadOrStore(t, d)
+	typeBuildMu.Lock()
+	defer typeBuildMu.Unlock()
+
+	if d, ok := typeCache.Load(t); ok {
+		return d.(*descriptor)
 	}
-	return actual.(*descriptor)
+
+	d := buildDescriptor(t, make(map[reflect.Type]*descriptor, 8))
+	d = canonicalizeDescriptorTree(d, make(map[*descriptor]*descriptor, 8))
+	publishDescriptorTree(d, make(map[*descriptor]struct{}, 8))
+	return d
+}
+
+func canonicalizeDescriptorTree(
+	d *descriptor,
+	seen map[*descriptor]*descriptor,
+) *descriptor {
+	if d == nil {
+		return nil
+	}
+	if canonical, ok := seen[d]; ok {
+		return canonical
+	}
+	if d.t != nil {
+		if existing, ok := typeCache.Load(d.t); ok {
+			canonical := existing.(*descriptor)
+			seen[d] = canonical
+			return canonical
+		}
+	}
+
+	seen[d] = d
+	d.key = canonicalizeDescriptorTree(d.key, seen)
+	d.elem = canonicalizeDescriptorTree(d.elem, seen)
+	for i := range d.fields {
+		if d.fields[i].Type != nil {
+			d.fields[i].Type = canonicalizeDescriptorTree(d.fields[i].Type.desc, seen).kind
+		}
+	}
+	return d
 }
 
 func publishDescriptorTree(d *descriptor, seen map[*descriptor]struct{}) {
@@ -142,7 +176,7 @@ func classify(d *descriptor, t reflect.Type, seen map[reflect.Type]*descriptor) 
 		d.flags |= flagMap
 		d.key = buildDescriptor(t.Key(), seen)
 		d.elem = buildDescriptor(t.Elem(), seen)
-		d.flags |= leafFlags(d.key.flags) | leafFlags(d.elem.flags)
+		d.flags |= leafFlags(d.elem.flags)
 	case reflect.Chan:
 		d.flags |= flagChannel
 		elem := buildDescriptor(t.Elem(), seen)

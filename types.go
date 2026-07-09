@@ -2,6 +2,7 @@ package kind
 
 import (
 	"reflect"
+	"slices"
 	"strings"
 )
 
@@ -72,6 +73,10 @@ var nilKind = &Kind{
 	},
 	isNil:  true,
 	isZero: true,
+}
+
+func init() {
+	nilKind.desc.kind = nilKind
 }
 
 // Of returns a Kind that describes the dynamic type of v.
@@ -169,16 +174,44 @@ func (k *Kind) MapValueKind() *Kind {
 }
 
 // Is reports whether name matches the canonical Go type name. Spaces are
-// ignored, and built-in names are also compared case-insensitively for
-// compatibility with older releases.
+// ignored. Built-in scalar names are compared case-insensitively for
+// compatibility with older releases; named and composite types are not.
 func (k *Kind) Is(name string) bool {
 	got := compactName(k.Name())
 	want := compactName(name)
-	return got == want || strings.EqualFold(got, want)
+	if got == want {
+		return true
+	}
+	return isBuiltinName(got) && strings.EqualFold(got, want)
 }
 
 func compactName(s string) string {
 	return strings.Join(strings.Fields(s), "")
+}
+
+func isBuiltinName(name string) bool {
+	return slices.Contains(builtinNames, name)
+}
+
+var builtinNames = []string{
+	"bool",
+	"string",
+	"int",
+	"int8",
+	"int16",
+	"int32",
+	"int64",
+	"uint",
+	"uint8",
+	"uint16",
+	"uint32",
+	"uint64",
+	"uintptr",
+	"float32",
+	"float64",
+	"complex64",
+	"complex128",
+	"unsafe.Pointer",
 }
 
 func (k *Kind) has(f flag) bool {

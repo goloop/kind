@@ -9,6 +9,7 @@ import (
 type userID int
 type namedString string
 type recursiveSlice []recursiveSlice
+type caseFoldStruct struct{}
 
 func TestOfSimpleTypes(t *testing.T) {
 	tests := []struct {
@@ -129,6 +130,9 @@ func TestMapKeyAndElem(t *testing.T) {
 	if elem := k.MapValueKind(); !elem.IsSlice() || !elem.IsInt() || elem.Name() != "[]int" {
 		t.Fatalf("unexpected value kind: %s", elem)
 	}
+	if k.IsString() {
+		t.Fatal("map key type must not leak into scalar leaf flags")
+	}
 }
 
 func TestOfTypeAndInterface(t *testing.T) {
@@ -186,18 +190,44 @@ func TestRecursiveTypesDoNotLoop(t *testing.T) {
 
 func TestIsName(t *testing.T) {
 	k := Of([]int{})
-	if !k.Is("[]int") || !k.Is("[] int") || !k.Is("[]INT") {
+	if !k.Is("[]int") || !k.Is("[] int") {
 		t.Fatal("Is should match compact names")
+	}
+	if k.Is("[]INT") {
+		t.Fatal("Is should not case-fold composite names")
+	}
+	if !Of(1).Is("INT") {
+		t.Fatal("Is should case-fold builtin names")
+	}
+	if Of(caseFoldStruct{}).Is("kind.casefoldstruct") {
+		t.Fatal("Is should not case-fold named types")
 	}
 }
 
 func TestCacheReusesDescriptor(t *testing.T) {
+	_ = Of([]string{})
 	a := Of(map[string]int{})
 	b := Of(map[string]int{"x": 1})
 	if a.desc != b.desc {
 		t.Fatal("expected descriptor cache reuse")
 	}
+	if descriptorOf(reflect.TypeFor[string]()) != a.MapKeyKind().desc {
+		t.Fatal("expected canonical key descriptor reuse")
+	}
 	if descriptorOf(reflect.TypeFor[int]()) != a.MapValueKind().desc {
-		t.Fatal("expected nested descriptor cache reuse")
+		t.Fatal("expected canonical value descriptor reuse")
+	}
+}
+
+func TestNilShapeDoesNotPanic(t *testing.T) {
+	k := Of(nil)
+	if got := k.Depth(); got != 0 {
+		t.Fatalf("nil Depth() = %d, want 0", got)
+	}
+	if k.Leaf() != k || k.Base() != k {
+		t.Fatal("nil Leaf/Base should return canonical nil Kind")
+	}
+	if k.Leaf().Name() != nilName {
+		t.Fatalf("nil Leaf name = %q, want %q", k.Leaf().Name(), nilName)
 	}
 }
