@@ -165,22 +165,80 @@ functions rather than `k.Implements[T]()` methods.
 
 ```go
 func (k *Kind) Implements(target reflect.Type) bool
+func (k *Kind) CanImplement(target reflect.Type) bool
 func (k *Kind) AssignableTo(target reflect.Type) bool
 func (k *Kind) ConvertibleTo(target reflect.Type) bool
 func Implements[T any](k *Kind) bool
+func CanImplement[T any](k *Kind) bool
 func AssignableTo[T any](k *Kind) bool
 func ConvertibleTo[T any](k *Kind) bool
 ```
+
+`Implements` is strict: the exact type must implement the interface.
+`CanImplement` is capability-oriented: the exact type or, for non-pointer
+types, `*T` may implement the interface. Capability helpers use this practical
+rule because parsers and unmarshaler methods often have pointer receivers.
 
 For common parser/encoding checks:
 
 ```go
 IsTextMarshaler() bool
 IsTextUnmarshaler() bool
+IsBinaryMarshaler() bool
+IsBinaryUnmarshaler() bool
 IsJSONMarshaler() bool
 IsJSONUnmarshaler() bool
 IsError() bool
 IsStringer() bool
+IsEnvMarshaler() bool
+IsEnvUnmarshaler() bool
+IsValidator() bool
+IsVerifier() bool
+IsStringParser() bool
+IsBytesParser() bool
+IsSetter() bool
+IsFlagValue() bool
+IsScanner() bool
+IsValuer() bool
+IsReader() bool
+IsWriter() bool
+IsCloser() bool
+IsReaderFrom() bool
+IsWriterTo() bool
+IsLogValuer() bool
+```
+
+The GoLoop-style capability interfaces are local shapes, not imports from
+other GoLoop modules:
+
+```go
+type EnvMarshaler interface {
+    MarshalEnv() (map[string]string, error)
+}
+
+type EnvUnmarshaler interface {
+    UnmarshalEnv(map[string]string) error
+}
+
+type Validator interface {
+    Validate() error
+}
+
+type Verifier interface {
+    Valid() bool
+}
+
+type StringParser interface {
+    Parse(string) error
+}
+
+type BytesParser interface {
+    ParseBytes([]byte) error
+}
+
+type Setter interface {
+    Set(string) error
+}
 ```
 
 ## Conversions
@@ -240,6 +298,15 @@ field, _ := k.Field("Port")
 fmt.Println(k.HasTag("env"))          // true
 fmt.Println(field.Type.IsInt())       // true
 fmt.Println(field.TagValue("json"))   // "port", true
+```
+
+```go
+type Request struct{}
+
+func (*Request) Validate() error { return nil }
+
+k := kind.TypeOf[Request]()
+fmt.Println(k.IsValidator()) // true: *Request has Validate
 ```
 
 ## Performance

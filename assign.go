@@ -22,6 +22,21 @@ func (k *Kind) ConvertibleTo(target reflect.Type) bool {
 	return t != nil && target != nil && t.ConvertibleTo(target)
 }
 
+// CanImplement reports whether the type or, for non-pointer types, a pointer
+// to the type implements target. It is useful for addressable values whose
+// parsing/validation methods usually have pointer receivers.
+func (k *Kind) CanImplement(target reflect.Type) bool {
+	t := k.Type()
+	target = interfaceType(target)
+	if t == nil || target == nil {
+		return false
+	}
+	if t.Implements(target) {
+		return true
+	}
+	return t.Kind() != reflect.Pointer && reflect.PointerTo(t).Implements(target)
+}
+
 // Implements reports whether k implements interface T.
 func Implements[T any](k *Kind) bool {
 	return k.Implements(reflect.TypeFor[T]())
@@ -35,6 +50,11 @@ func AssignableTo[T any](k *Kind) bool {
 // ConvertibleTo reports whether k is convertible to T.
 func ConvertibleTo[T any](k *Kind) bool {
 	return k.ConvertibleTo(reflect.TypeFor[T]())
+}
+
+// CanImplement reports whether k or *k implements interface T.
+func CanImplement[T any](k *Kind) bool {
+	return k.CanImplement(reflect.TypeFor[T]())
 }
 
 func interfaceType(t reflect.Type) reflect.Type {

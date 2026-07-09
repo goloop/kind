@@ -8,30 +8,40 @@ import (
 
 // IsTextMarshaler reports whether the type implements encoding.TextMarshaler.
 func (k *Kind) IsTextMarshaler() bool {
-	return Implements[encoding.TextMarshaler](k)
+	return CanImplement[encoding.TextMarshaler](k)
 }
 
 // IsTextUnmarshaler reports whether the type implements encoding.TextUnmarshaler.
 func (k *Kind) IsTextUnmarshaler() bool {
-	return Implements[encoding.TextUnmarshaler](k)
+	return CanImplement[encoding.TextUnmarshaler](k)
+}
+
+// IsBinaryMarshaler reports whether the type implements encoding.BinaryMarshaler.
+func (k *Kind) IsBinaryMarshaler() bool {
+	return CanImplement[encoding.BinaryMarshaler](k)
+}
+
+// IsBinaryUnmarshaler reports whether the type implements encoding.BinaryUnmarshaler.
+func (k *Kind) IsBinaryUnmarshaler() bool {
+	return CanImplement[encoding.BinaryUnmarshaler](k)
 }
 
 // IsJSONMarshaler reports whether the type implements json.Marshaler.
 func (k *Kind) IsJSONMarshaler() bool {
-	return Implements[json.Marshaler](k)
+	return CanImplement[json.Marshaler](k)
 }
 
 // IsJSONUnmarshaler reports whether the type implements json.Unmarshaler.
 func (k *Kind) IsJSONUnmarshaler() bool {
-	return Implements[json.Unmarshaler](k)
+	return CanImplement[json.Unmarshaler](k)
 }
 
 // IsError reports whether the type implements error.
 func (k *Kind) IsError() bool {
-	return Implements[error](k)
+	return CanImplement[error](k)
 }
 
 // IsStringer reports whether the type implements fmt.Stringer.
 func (k *Kind) IsStringer() bool {
-	return Implements[fmt.Stringer](k)
+	return CanImplement[fmt.Stringer](k)
 }

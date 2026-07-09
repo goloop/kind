@@ -23,6 +23,9 @@ configuration loaders and diagnostics.
 - Struct field/tag helpers for parser and config packages.
 - Assignability and interface helpers, including generic top-level functions
   such as `kind.Implements[encoding.TextMarshaler](k)`.
+- Capability helpers answer what a type can do: text/binary/JSON/env
+  marshaling, validation, parsing, flag values, SQL scanner/valuer, IO and
+  slog value support.
 - Numeric and scalar predicates, including named types and `uintptr`.
 - Safe `As*` helpers for scalar values; named scalar types convert without
   panicking.
@@ -68,6 +71,17 @@ type Reader interface {
 
 k := kind.TypeOf[Reader]()
 fmt.Println(k.IsInterface()) // true
+```
+
+Capability checks are based on interfaces and method sets, not package names:
+
+```go
+type Request struct{}
+
+func (*Request) Validate() error { return nil }
+
+k := kind.TypeOf[Request]()
+fmt.Println(k.IsValidator()) // true
 ```
 
 Struct tags are cached with the type descriptor:

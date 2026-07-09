@@ -6,6 +6,10 @@ import (
 	"github.com/goloop/kind"
 )
 
+type exampleRequest struct{}
+
+func (*exampleRequest) Validate() error { return nil }
+
 func ExampleOf() {
 	k := kind.Of([]int{1, 2, 3})
 
@@ -51,4 +55,13 @@ func ExampleKind_Fields() {
 	// true
 	// true
 	// port
+}
+
+func ExampleKind_IsValidator() {
+	k := kind.TypeOf[exampleRequest]()
+
+	fmt.Println(k.IsValidator())
+
+	// Output:
+	// true
 }
