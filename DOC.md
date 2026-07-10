@@ -5,34 +5,63 @@ types. It targets Go 1.24+ and has no third-party dependencies.
 
 Ukrainian version: **[DOC.UK.md](DOC.UK.md)**.
 
-## Who this is for
+## Purpose
 
-`kind` is built for people writing **parsers, decoders and binders** - the code
-that takes a `string`, a row, an env var or a config value and pushes it into an
-arbitrary Go type. That work is normally a pile of hand-rolled `reflect`: "is
-this an int? a pointer to a struct? does it implement `encoding.TextUnmarshaler`
-on a pointer receiver? what is the element type behind these two slices?"
+`kind` answers one question - **"what is this type, and what can it do?"** -
+for code that must handle *arbitrary* Go types at runtime. It wraps `reflect`
+in a cached, immutable descriptor with a flat vocabulary of predicates, so the
+answer is cheap to ask and hard to get wrong.
 
-`kind` answers those questions with one cached descriptor and a flat vocabulary
-of predicates, so you can ship a parser without living inside `reflect`:
+## When to use it
 
-```go
-k := kind.Of(target)
-switch {
-case k.CanImplement(textUnmarshalerType): // *T counts, not just T
-    // hand the raw text to UnmarshalText
-case k.IsAnyInt():
-    n, _ := strconv.ParseInt(raw, 10, 64)
-    // set as int/int8/.../int64
-case k.IsSlice():
-    // split and recurse on k.Elem()
-}
-```
+The module earns its place when your code receives types it cannot know at
+compile time and has to make decisions about them:
 
-It is a **specific** tool, not a general-purpose framework: if you never reach
-for `reflect`, you do not need `kind`. But when you do, it removes the tedious,
-error-prone half of the job and caches the type analysis so a hot parse loop
-pays for it once per type.
+- **Parsers, decoders and binders** - the primary audience. Env vars, config
+  files, CLI flags, query parameters, DB rows: anything that takes text and
+  pushes it into a struct the *caller* defines. That work is normally a pile
+  of hand-rolled `reflect` ("is this an int? a pointer to a struct? what is
+  the element type behind these two slices?"); with `kind` the dispatch reads
+  like a table:
+
+  ```go
+  k := kind.Of(target)
+  switch {
+  case k.CanImplement(textUnmarshalerType): // *T counts, not just T
+      // hand the raw text to UnmarshalText
+  case k.IsAnyInt():
+      n, _ := strconv.ParseInt(raw, 10, 64)
+      // set as int/int8/.../int64
+  case k.IsSlice():
+      // split and recurse on k.Elem()
+  }
+  ```
+
+- **Capability detection.** "Does this type - or a pointer to it - implement
+  `encoding.TextUnmarshaler`, `sql.Scanner`, `flag.Value`, a
+  `Set(string) error` method?" `CanImplement` encodes the pointer-receiver
+  rule that parsers actually need, and the `Is*` capability predicates cover
+  the common stdlib interfaces in one style.
+- **Struct walking.** Field lists, tags and nested shapes for validators,
+  schema generators and code generators.
+- **Hot paths.** Descriptors are cached per `reflect.Type`, so a parse loop
+  pays for the classification once per type, not once per value.
+
+## When not to use it
+
+- **The types are known at compile time.** A plain type switch beats any
+  reflection - `kind` included.
+- **One small check in one place.** Two lines of stdlib `reflect` do not
+  justify a dependency.
+- **You need to write values.** `kind` is read-only introspection: it tells
+  you what a type is and what it can do, but setting the value stays your
+  code (`reflect.Value.Set`, generated setters, and so on).
+- **You are (de)serializing a standard format.** `encoding/json` and friends
+  already do their own reflection; `kind` adds nothing there.
+
+In short: if you never reach for `reflect`, you do not need `kind`. When you
+do reach for it - to accept arbitrary user types in a parser or binder - it
+removes the tedious, error-prone half of the job.
 
 ## Constructors
 
