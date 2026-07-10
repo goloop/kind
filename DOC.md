@@ -3,6 +3,37 @@
 `kind` is a cached reflection helper for classifying Go values and static
 types. It targets Go 1.24+ and has no third-party dependencies.
 
+Ukrainian version: **[DOC.UK.md](DOC.UK.md)**.
+
+## Who this is for
+
+`kind` is built for people writing **parsers, decoders and binders** - the code
+that takes a `string`, a row, an env var or a config value and pushes it into an
+arbitrary Go type. That work is normally a pile of hand-rolled `reflect`: "is
+this an int? a pointer to a struct? does it implement `encoding.TextUnmarshaler`
+on a pointer receiver? what is the element type behind these two slices?"
+
+`kind` answers those questions with one cached descriptor and a flat vocabulary
+of predicates, so you can ship a parser without living inside `reflect`:
+
+```go
+k := kind.Of(target)
+switch {
+case k.CanImplement(textUnmarshalerType): // *T counts, not just T
+    // hand the raw text to UnmarshalText
+case k.IsAnyInt():
+    n, _ := strconv.ParseInt(raw, 10, 64)
+    // set as int/int8/.../int64
+case k.IsSlice():
+    // split and recurse on k.Elem()
+}
+```
+
+It is a **specific** tool, not a general-purpose framework: if you never reach
+for `reflect`, you do not need `kind`. But when you do, it removes the tedious,
+error-prone half of the job and caches the type analysis so a hot parse loop
+pays for it once per type.
+
 ## Constructors
 
 ```go
@@ -53,6 +84,11 @@ IsNamed() bool
 IsEmpty() bool
 IsTruthy() bool
 ```
+
+`IsEmpty` reports true for nil, the zero value, and length-zero strings, arrays,
+slices, maps and channels. It does **not** dereference pointers: a non-nil
+pointer to a zero value is not empty (`Of(&T{}).IsEmpty() == false`). Call
+`Deref` first if you need the emptiness of the pointee.
 
 Containers and composite/reference types:
 
@@ -111,10 +147,18 @@ IsUnsigned() bool
 IsSigned() bool
 ```
 
-Container predicates keep the historical behaviour where the element leaf type
-is also visible. For example, `kind.Of([]int{}).IsSlice()` and
+The scalar predicates are **leaf-aware**: a container reports the leaf type of
+its element chain, so `kind.Of([]int{}).IsSlice()` and
 `kind.Of([]int{}).IsInt()` both return true. For maps, scalar leaf predicates
 describe the value type only; inspect the key with `Key` or `MapKeyKind`.
+
+This is what a recursive parser wants (peek at the leaf, then descend). When you
+instead need a strict check that a value is *exactly* a scalar and not a
+container, compare `Kind`:
+
+```go
+k.Kind() == reflect.Int // strictly an int, not []int or map[K]int
+```
 
 ## Shape and Indirection
 

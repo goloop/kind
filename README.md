@@ -108,6 +108,10 @@ fmt.Println(field.Tag.Get("json"))  // port
 `reflect.TypeOf`. If you need a static interface type, use `TypeOf[T]()` or
 `OfType`.
 
+## Documentation
+
+Full reference: **[DOC.md](DOC.md)** (Ukrainian: **[DOC.UK.md](DOC.UK.md)**).
+
 ## Contributing
 
 Before submitting changes, run:
