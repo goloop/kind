@@ -63,28 +63,28 @@ func (k *Kind) IsFunction() bool { return k.has(flagFunction) }
 // IsChannel reports whether the type is a channel.
 func (k *Kind) IsChannel() bool { return k.has(flagChannel) }
 
+// The Is<scalar> predicates below are leaf-aware: a container reports the
+// leaf type of its element chain, so Of([]int{}).IsInt() is true and, for
+// maps, the leaf follows the value type, not the key. When you need a strict
+// scalar test that excludes containers, compare k.Kind() with the reflect
+// kind instead (for example k.Kind() == reflect.Int).
+
 // IsBool reports whether the type or its element leaf is bool.
-// For maps, this follows the value type, not the key type.
 func (k *Kind) IsBool() bool { return k.has(flagBool) }
 
 // IsString reports whether the type or its element leaf is string.
-// For maps, this follows the value type, not the key type.
 func (k *Kind) IsString() bool { return k.has(flagString) }
 
 // IsInt8 reports whether the type or its element leaf is int8.
-// For maps, this follows the value type, not the key type.
 func (k *Kind) IsInt8() bool { return k.has(flagInt8) }
 
 // IsInt16 reports whether the type or its element leaf is int16.
-// For maps, this follows the value type, not the key type.
 func (k *Kind) IsInt16() bool { return k.has(flagInt16) }
 
 // IsInt32 reports whether the type or its element leaf is int32.
-// For maps, this follows the value type, not the key type.
 func (k *Kind) IsInt32() bool { return k.has(flagInt32) }
 
 // IsInt64 reports whether the type or its element leaf is int64.
-// For maps, this follows the value type, not the key type.
 func (k *Kind) IsInt64() bool { return k.has(flagInt64) }
 
 // IsUint8 reports whether the type or its element leaf is uint8.

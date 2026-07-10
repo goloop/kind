@@ -5,6 +5,10 @@ import "reflect"
 // IsEmpty reports whether the value is nil, zero, or has length zero for
 // strings, arrays, slices, maps and channels. For type-only Kinds it reports
 // true only for the nil Kind.
+//
+// Pointers are not dereferenced: a non-nil pointer to a zero value is not
+// empty (IsEmpty(&T{}) == false). Call Deref first if you need the emptiness
+// of the pointee.
 func (k *Kind) IsEmpty() bool {
 	if k == nil || k.IsNil() {
 		return true
