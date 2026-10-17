@@ -1,4 +1,4 @@
-[![deps.dev](https://img.shields.io/badge/deps.dev-insights-4c8dbc)](https://deps.dev/go/github.com%2Fgoloop%2Fkind) [![Go Reference](https://pkg.go.dev/badge/github.com/goloop/kind.svg)](https://pkg.go.dev/github.com/goloop/kind) [![License](https://img.shields.io/badge/license-MIT-brightgreen?style=flat)](https://github.com/goloop/kind/blob/master/LICENSE) [![Stay with Ukraine](https://img.shields.io/static/v1?label=Stay%20with&message=Ukraine%20♥&color=ffD700&labelColor=0057B8&style=flat)](https://u24.gov.ua/)
+[![deps.dev](https://img.shields.io/badge/deps.dev-insights-4c8dbc)](https://deps.dev/go/github.com%2Fgoloop%2Fkind) [![Go Reference](https://pkg.go.dev/badge/github.com/goloop/kind.svg)](https://pkg.go.dev/github.com/goloop/kind) [![License](https://img.shields.io/badge/license-MIT-brightgreen?style=flat)](https://github.com/goloop/kind/blob/v1/LICENSE) [![Stay with Ukraine](https://img.shields.io/static/v1?label=Stay%20with&message=Ukraine%20♥&color=ffD700&labelColor=0057B8&style=flat)](https://u24.gov.ua/)
 
 # kind
 
@@ -125,3 +125,7 @@ gofmt -l .
 ## License
 
 `kind` is released under the MIT License. See [LICENSE](LICENSE).
+
+## Release v1.0.0
+
+Make shape inspection safe on nil receivers and publish the stable API. The v1 release keeps the existing import path and public API. Future incompatible changes require a new major version.

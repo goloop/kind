@@ -394,3 +394,7 @@ The package caches descriptors by `reflect.Type` in a `sync.Map`. `Of(value)`
 still evaluates value-specific state (`nil`, `zero`) per call. `OfType`,
 `TypeOf`, `Elem`, `Key`, `MapKeyKind` and `MapValueKind` reuse type-only `Kind`
 values from the cache.
+
+## Release v1.0.0
+
+Make shape inspection safe on nil receivers and publish the stable API. The v1 release keeps the existing import path and public API. Future incompatible changes require a new major version.

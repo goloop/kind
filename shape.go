@@ -74,6 +74,9 @@ func (k *Kind) Cap() int {
 
 // Depth returns how many pointer/container indirections lead to the leaf type.
 func (k *Kind) Depth() int {
+	if k == nil {
+		return 0
+	}
 	depth, _ := walkLeaf(k.desc)
 	return depth
 }
@@ -81,6 +84,9 @@ func (k *Kind) Depth() int {
 // Leaf returns the terminal type after following pointers, arrays, slices,
 // maps and channels through their element type. It is safe for recursive types.
 func (k *Kind) Leaf() *Kind {
+	if k == nil {
+		return nilKind
+	}
 	_, leaf := walkLeaf(k.desc)
 	if leaf == nil {
 		return nilKind

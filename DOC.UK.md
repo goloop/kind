@@ -394,3 +394,7 @@ fmt.Println(k.IsValidator()) // true: *Request має Validate
 обчислює стан значення (`nil`, `zero`) на кожен виклик. `OfType`, `TypeOf`,
 `Elem`, `Key`, `MapKeyKind` і `MapValueKind` перевикористовують type-only Kind з
 кешу.
+
+## Реліз v1.0.0
+
+Depth для nil повертає 0; Leaf і Base повертають опис nil, для якого IsNil() дорівнює true. Реліз v1 зберігає поточний import path і публічний API. Майбутні несумісні зміни потребуватимуть нової головної версії.
